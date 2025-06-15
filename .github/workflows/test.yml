@@ -149,7 +149,8 @@ jobs:
             sysbench --version
           else
             echo "Sysbench not available on this platform, installing"
-            apt -y install make automake libtool pkg-config libaio-dev libmysqlclient-dev libssl-dev
+            curl -s https://packagecloud.io/install/repositories/akopytov/sysbench/script.deb.sh | sudo bash
+            sudo apt -y install sysbench
           fi
 
           echo "=== Running sysbench test ==="
