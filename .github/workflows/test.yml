@@ -83,7 +83,7 @@ jobs:
           # Wait for MySQL to be ready
           timeout=60
           while [ $timeout -gt 0 ]; do
-            if docker compose exec -T mysql mysqladmin ping -h"127.0.0.1" -uroot -proot_password --silent; then
+            if docker compose exec -T db mysqladmin ping -h"127.0.0.1" -uroot -proot_password --silent; then
               echo "✅ MySQL is responding"
               break
             fi
