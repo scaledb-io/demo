@@ -39,7 +39,7 @@ jobs:
           echo "Runner OS: ${{ runner.os }}"
           echo "Runner Architecture: ${{ runner.arch }}"
           docker --version
-          docker-compose --version
+          docker compose version
           uname -a
 
       - name: Check image architecture support
@@ -55,27 +55,27 @@ jobs:
 
       - name: Validate docker-compose configuration
         run: |
-          docker-compose config --quiet
+          docker compose config --quiet
           echo "✅ Docker Compose configuration is valid"
 
       - name: Pull images before starting
         run: |
           echo "Pre-pulling images to check platform compatibility..."
-          docker-compose pull
+          docker compose pull
 
       - name: Start services
         run: |
           echo "Starting services..."
-          docker-compose up -d
+          docker compose up -d
           
           echo "Waiting for services to be ready..."
           sleep 45
           
           echo "Checking service status..."
-          docker-compose ps
+          docker compose ps
           
           echo "Checking service logs..."
-          docker-compose logs --tail=20
+          docker compose logs --tail=20
 
       - name: Health check services
         run: |
@@ -83,7 +83,7 @@ jobs:
           # Wait for MySQL to be ready
           timeout=60
           while [ $timeout -gt 0 ]; do
-            if docker-compose exec -T mysql mysqladmin ping -h"127.0.0.1" -uroot -ppassword --silent; then
+            if docker compose exec -T mysql mysqladmin ping -h"127.0.0.1" -uroot -ppassword --silent; then
               echo "✅ MySQL is responding"
               break
             fi
@@ -94,7 +94,7 @@ jobs:
           
           if [ $timeout -le 0 ]; then
             echo "❌ MySQL failed to start within timeout"
-            docker-compose logs mysql
+            docker compose logs mysql
             exit 1
           fi
           
@@ -102,7 +102,7 @@ jobs:
           # Check ProxySQL admin interface
           timeout=30
           while [ $timeout -gt 0 ]; do
-            if docker-compose exec -T proxysql mysql -h127.0.0.1 -P6032 -uradmin -pradmin -e "SELECT 1;" > /dev/null 2>&1; then
+            if docker compose exec -T proxysql mysql -h127.0.0.1 -P6032 -uradmin -pradmin -e "SELECT 1;" > /dev/null 2>&1; then
               echo "✅ ProxySQL admin interface is responding"
               break
             fi
@@ -113,24 +113,24 @@ jobs:
           
           echo "=== ReadySet Health Check ==="
           # Check if ReadySet is responding (adjust port/method as needed)
-          if docker-compose ps readyset | grep -q "Up"; then
+          if docker compose ps readyset | grep -q "Up"; then
             echo "✅ ReadySet container is running"
           else
             echo "❌ ReadySet container is not running"
-            docker-compose logs readyset
+            docker compose logs readyset
             exit 1
           fi
 
       - name: Test database connectivity
         run: |
           echo "=== Testing MySQL connectivity ==="
-          docker-compose exec -T mysql mysql -h127.0.0.1 -uroot -ppassword -e "SELECT VERSION();"
+          docker compose exec -T mysql mysql -h127.0.0.1 -uroot -ppassword -e "SELECT VERSION();"
           
           echo "=== Testing ProxySQL connectivity ==="
-          docker-compose exec -T proxysql mysql -h127.0.0.1 -P6033 -uroot -ppassword -e "SELECT 1 as test;"
+          docker compose exec -T proxysql mysql -h127.0.0.1 -P6033 -uroot -ppassword -e "SELECT 1 as test;"
           
           echo "=== Creating test database and table ==="
-          docker-compose exec -T mysql mysql -h127.0.0.1 -uroot -ppassword -e "
+          docker compose exec -T mysql mysql -h127.0.0.1 -uroot -ppassword -e "
             CREATE DATABASE IF NOT EXISTS testdb;
             USE testdb;
             CREATE TABLE IF NOT EXISTS test_table (
@@ -158,20 +158,20 @@ jobs:
         if: failure()
         run: |
           echo "=== Service Status ==="
-          docker-compose ps
+          docker compose ps
           
           echo "=== MySQL Logs ==="
-          docker-compose logs mysql
+          docker compose logs mysql
           
           echo "=== ProxySQL Logs ==="
-          docker-compose logs proxysql
+          docker compose logs proxysql
           
           echo "=== ReadySet Logs ==="
-          docker-compose logs readyset
+          docker compose logs readyset
 
       - name: Cleanup
         if: always()
         run: |
           echo "Cleaning up..."
-          docker-compose down -v
+          docker compose down -v
           docker system prune -f
