@@ -127,7 +127,7 @@ jobs:
           docker compose exec -T db mysql -h127.0.0.1 -uroot -proot_password -e "SELECT VERSION();"
           
           echo "=== Testing ProxySQL connectivity ==="
-          docker compose exec -T proxysql mysql -h127.0.0.1 -P6033 -uroot -ppassword -e "SELECT 1 as test;"
+          docker compose exec -T proxysql mysql -h127.0.0.1 -P6033 -uroot -proot_password -e "SELECT 1 as test;"
           
           echo "=== Creating test database and table ==="
           docker compose exec -T db mysql -h127.0.0.1 -uroot -proot_password -e "
