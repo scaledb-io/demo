@@ -94,7 +94,7 @@ jobs:
           
           if [ $timeout -le 0 ]; then
             echo "❌ MySQL failed to start within timeout"
-            docker compose logs mysql
+            docker compose logs db
             exit 1
           fi
           
@@ -124,13 +124,13 @@ jobs:
       - name: Test database connectivity
         run: |
           echo "=== Testing MySQL connectivity ==="
-          docker compose exec -T mysql mysql -h127.0.0.1 -uroot -ppassword -e "SELECT VERSION();"
+          docker compose exec -T db mysql -h127.0.0.1 -uroot -proot_password -e "SELECT VERSION();"
           
           echo "=== Testing ProxySQL connectivity ==="
           docker compose exec -T proxysql mysql -h127.0.0.1 -P6033 -uroot -ppassword -e "SELECT 1 as test;"
           
           echo "=== Creating test database and table ==="
-          docker compose exec -T mysql mysql -h127.0.0.1 -uroot -ppassword -e "
+          docker compose exec -T db mysql -h127.0.0.1 -uroot -proot_password -e "
             CREATE DATABASE IF NOT EXISTS testdb;
             USE testdb;
             CREATE TABLE IF NOT EXISTS test_table (
@@ -149,7 +149,7 @@ jobs:
             echo "=== Running sysbench test ==="
             # Add your sysbench commands here
             sysbench --version
-            # Example: sysbench oltp_read_write --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=root --mysql-password=password prepare
+            # Example: sysbench oltp_read_write --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=root --mysql-password=root_password prepare
           else
             echo "Sysbench not available on this platform, skipping performance test"
           fi
@@ -161,7 +161,7 @@ jobs:
           docker compose ps
           
           echo "=== MySQL Logs ==="
-          docker compose logs mysql
+          docker compose logs db
           
           echo "=== ProxySQL Logs ==="
           docker compose logs proxysql
