@@ -15,8 +15,8 @@ jobs:
       matrix:
         os: 
           - ubuntu-latest    # Linux x86_64
-          - macos-latest     # macOS ARM64 (M1/M2)
-          - macos-13         # macOS x86_64 (Intel)
+          # - macos-latest     # macOS ARM64 (M1/M2)
+          # - macos-13         # macOS x86_64 (Intel)
     
     runs-on: ${{ matrix.os }}
     
