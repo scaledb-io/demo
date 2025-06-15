@@ -146,13 +146,14 @@ jobs:
         continue-on-error: true # Don't fail the workflow if sysbench isn't available
         run: |
           if command -v sysbench &> /dev/null; then
-            echo "=== Running sysbench test ==="
-            # Add your sysbench commands here
             sysbench --version
-            # Example: sysbench oltp_read_write --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=root --mysql-password=root_password prepare
           else
-            echo "Sysbench not available on this platform, skipping performance test"
+            echo "Sysbench not available on this platform, installing"
+            apt -y install make automake libtool pkg-config libaio-dev libmysqlclient-dev libssl-dev
           fi
+
+          echo "=== Running sysbench test ==="
+          sysbench oltp_read_write --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=root --mysql-password=root_password prepare
 
       - name: Display service logs on failure
         if: failure()
