@@ -15,8 +15,7 @@ jobs:
       matrix:
         os: 
           - ubuntu-latest    # Linux x86_64
-          # - macos-latest     # macOS ARM64 (M1/M2)
-          # - macos-13         # macOS x86_64 (Intel)
+          - macos-latest     # macOS ARM64 (M1/M2)
     
     runs-on: ${{ matrix.os }}
     
@@ -42,6 +41,14 @@ jobs:
           docker compose version
           uname -a
 
+      - name: Adjust ReadySet image for x86_64
+        if: runner.arch == 'X64'
+        run: |
+          echo "Adjusting ReadySet image for x86_64 architecture..."
+          sed -i.bak 's|altmannmarcelo/readyset-mac:latest|readysettech/readyset:latest|g' docker-compose.yml
+          echo "Updated docker-compose.yml:"
+          grep -A2 "readyset:" docker-compose.yml
+
       - name: Check image architecture support
         run: |
           echo "Checking MySQL image architecture support..."
@@ -51,7 +58,11 @@ jobs:
           docker buildx imagetools inspect proxysql/proxysql:latest --format "{{.Manifest.MediaType}}: {{.Manifest.Platform}}" || echo "ProxySQL inspection failed"
           
           echo "Checking ReadySet image architecture support..."
-          docker buildx imagetools inspect public.ecr.aws/readyset/readyset:latest --format "{{.Manifest.MediaType}}: {{.Manifest.Platform}}" || echo "ReadySet inspection failed"
+          if [ "${{ runner.arch }}" = "X64" ]; then
+            docker buildx imagetools inspect readysettech/readyset:latest --format "{{.Manifest.MediaType}}: {{.Manifest.Platform}}" || echo "ReadySet inspection failed"
+          else
+            docker buildx imagetools inspect altmannmarcelo/readyset-mac:latest --format "{{.Manifest.MediaType}}: {{.Manifest.Platform}}" || echo "ReadySet Mac inspection failed"
+          fi
 
       - name: Validate docker-compose configuration
         run: |
