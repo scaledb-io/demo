@@ -13,16 +13,46 @@ jobs:
     strategy:
       fail-fast: false # Continue testing other platforms even if one fails
       matrix:
-        os: 
-          - ubuntu-latest    # Linux x86_64
-          # Note: macOS runners are expensive and Docker setup is complex
-          # ARM64 compatibility is tested locally with altmannmarcelo/readyset-mac image
+        include:
+          - os: ubuntu-latest
+            name: "Linux x86_64"
+          - os: macos-latest  # ARM64 macOS (M1/M2)
+            name: "macOS ARM64"
     
     runs-on: ${{ matrix.os }}
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Docker on macOS
+        if: runner.os == 'macOS'
+        run: |
+          # Install Docker Desktop
+          brew install --cask docker
+          
+          # Start Docker Desktop app
+          open -a Docker
+          
+          # Wait for Docker daemon to be ready
+          echo "Waiting for Docker daemon to start..."
+          timeout=300  # 5 minutes timeout
+          while [ $timeout -gt 0 ]; do
+            if docker system info > /dev/null 2>&1; then
+              echo "Docker daemon is ready!"
+              docker --version
+              docker compose version
+              break
+            fi
+            echo "Waiting for Docker daemon... ($timeout seconds remaining)"
+            sleep 5
+            timeout=$((timeout-5))
+          done
+          
+          if [ $timeout -le 0 ]; then
+            echo "Docker daemon failed to start within timeout"
+            exit 1
+          fi
 
 
       - name: Display system info

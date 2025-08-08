@@ -39,8 +39,9 @@ docker compose -f docker-compose.yml -f docker-compose.arm64.yml up -d
 
 ## Architecture Support
 
-- **x86_64**: Uses official ReadySet image (tested in CI)
-- **ARM64**: Uses altmannmarcelo/readyset-mac image for Apple Silicon compatibility (tested locally)
+- **x86_64**: Uses official ReadySet image (tested in CI on Linux and Intel macOS)
+- **ARM64**: Uses altmannmarcelo/readyset-mac image for Apple Silicon compatibility
+  - Note: ARM64 macOS runners don't support Docker due to lack of nested virtualization
 
 ## Services
 
