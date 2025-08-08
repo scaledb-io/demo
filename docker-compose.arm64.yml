@@ -1,0 +1,4 @@
+# ARM64-specific overrides (for M1/M2/M3 Macs)
+services:
+  readyset:
+    image: altmannmarcelo/readyset-mac:latest

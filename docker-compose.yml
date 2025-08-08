@@ -35,7 +35,7 @@ services:
       - mysql-network
 
   readyset:
-    image: altmannmarcelo/readyset-mac:latest
+    image: ${READYSET_IMAGE:-readysettech/readyset:latest}
     container_name: readyset
     ports:
       - "3307:3307" # ReadySet client port

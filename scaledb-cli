@@ -1,0 +1,139 @@
+#!/bin/bash
+
+# ScaleDB CLI - A command-line interface for managing ScaleDB demo environment
+
+set -e
+
+ARCH=$(uname -m)
+COMPOSE_CMD="docker compose"
+
+# Determine compose files based on architecture
+case $ARCH in
+    x86_64)
+        COMPOSE_FILES="-f docker-compose.yml -f docker-compose.x86_64.yml"
+        ARCH_NAME="x86_64"
+        ;;
+    arm64|aarch64)
+        COMPOSE_FILES="-f docker-compose.yml -f docker-compose.arm64.yml"
+        ARCH_NAME="ARM64"
+        ;;
+    *)
+        COMPOSE_FILES="-f docker-compose.yml"
+        ARCH_NAME="default"
+        echo "Warning: Unknown architecture $ARCH, using default configuration..."
+        ;;
+esac
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+# Print ScaleDB banner
+print_banner() {
+    echo -e "${BLUE}"
+    echo "   ____            _      ____  ____  "
+    echo "  / ___|  ___ __ _| | ___|  _ \| __ ) "
+    echo "  \___ \ / __/ _\` | |/ _ \ | | |  _ \ "
+    echo "   ___) | (_| (_| | |  __/ |_| | |_) |"
+    echo "  |____/ \___\__,_|_|\___|____/|____/ "
+    echo -e "${NC}"
+    echo -e "${GREEN}ScaleDB Demo Environment${NC} (Architecture: ${ARCH_NAME})"
+    echo ""
+}
+
+# Show help
+show_help() {
+    print_banner
+    echo "Usage: ./scaledb-cli <command> [options]"
+    echo ""
+    echo "Commands:"
+    echo "  up, start         Start all services"
+    echo "  down, stop        Stop and remove all services"
+    echo "  restart           Restart all services"
+    echo "  ps, status        Show service status"
+    echo "  logs [service]    Show logs (all services or specific one)"
+    echo "  shell <service>   Open shell in a service container"
+    echo "  mysql             Connect to MySQL via ProxySQL"
+    echo "  help              Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  ./scaledb-cli up               # Start all services"
+    echo "  ./scaledb-cli logs readyset    # Show ReadySet logs"
+    echo "  ./scaledb-cli mysql            # Connect to MySQL"
+    echo "  ./scaledb-cli shell proxysql   # Open shell in ProxySQL container"
+}
+
+# Execute compose command with architecture-specific files
+compose_exec() {
+    $COMPOSE_CMD $COMPOSE_FILES "$@"
+}
+
+# Connect to MySQL through ProxySQL
+connect_mysql() {
+    echo -e "${BLUE}Connecting to MySQL through ProxySQL...${NC}"
+    docker exec -it proxysql mysql -h127.0.0.1 -P6033 -uroot -proot_password
+}
+
+# Main command handler
+case "${1:-help}" in
+    up|start)
+        print_banner
+        echo -e "${GREEN}Starting ScaleDB services...${NC}"
+        compose_exec up -d
+        echo -e "\n${GREEN}Services started!${NC}"
+        echo -e "Access points:"
+        echo -e "  - MySQL:    localhost:3306"
+        echo -e "  - ProxySQL: localhost:6033"
+        echo -e "  - ReadySet: localhost:3307"
+        echo -e "  - Grafana:  http://localhost:4000"
+        ;;
+    
+    down|stop)
+        echo -e "${YELLOW}Stopping ScaleDB services...${NC}"
+        compose_exec down -v
+        echo -e "${GREEN}Services stopped!${NC}"
+        ;;
+    
+    restart)
+        echo -e "${YELLOW}Restarting ScaleDB services...${NC}"
+        compose_exec restart
+        ;;
+    
+    ps|status)
+        print_banner
+        compose_exec ps
+        ;;
+    
+    logs)
+        if [ -n "$2" ]; then
+            compose_exec logs -f "$2"
+        else
+            compose_exec logs -f
+        fi
+        ;;
+    
+    shell)
+        if [ -z "$2" ]; then
+            echo -e "${RED}Error: Please specify a service name${NC}"
+            echo "Example: ./scaledb-cli shell proxysql"
+            exit 1
+        fi
+        docker exec -it "$2" /bin/bash || docker exec -it "$2" /bin/sh
+        ;;
+    
+    mysql)
+        connect_mysql
+        ;;
+    
+    help|--help|-h)
+        show_help
+        ;;
+    
+    *)
+        # Pass through any other docker-compose commands
+        compose_exec "$@"
+        ;;
+esac

@@ -1,0 +1,4 @@
+# x86_64-specific overrides (for Intel/AMD CPUs)
+services:
+  readyset:
+    image: readysettech/readyset:latest

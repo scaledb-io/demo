@@ -41,13 +41,17 @@ jobs:
           docker compose version
           uname -a
 
-      - name: Adjust ReadySet image for x86_64
-        if: runner.arch == 'X64'
+      - name: Select architecture-specific compose file
         run: |
-          echo "Adjusting ReadySet image for x86_64 architecture..."
-          sed -i.bak 's|altmannmarcelo/readyset-mac:latest|readysettech/readyset:latest|g' docker-compose.yml
-          echo "Updated docker-compose.yml:"
-          grep -A2 "readyset:" docker-compose.yml
+          ARCH=$(uname -m)
+          echo "Architecture: $ARCH"
+          if [ "$ARCH" = "x86_64" ]; then
+            echo "COMPOSE_FILE=docker-compose.yml:docker-compose.x86_64.yml" >> $GITHUB_ENV
+          elif [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
+            echo "COMPOSE_FILE=docker-compose.yml:docker-compose.arm64.yml" >> $GITHUB_ENV
+          else
+            echo "COMPOSE_FILE=docker-compose.yml" >> $GITHUB_ENV
+          fi
 
       - name: Check image architecture support
         run: |
