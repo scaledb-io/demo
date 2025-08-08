@@ -39,8 +39,8 @@ docker compose -f docker-compose.yml -f docker-compose.arm64.yml up -d
 
 ## Architecture Support
 
-- **x86_64**: Uses official ReadySet image
-- **ARM64**: Uses altmannmarcelo/readyset-mac image for Apple Silicon compatibility
+- **x86_64**: Uses official ReadySet image (tested in CI)
+- **ARM64**: Uses altmannmarcelo/readyset-mac image for Apple Silicon compatibility (tested locally)
 
 ## Services
 

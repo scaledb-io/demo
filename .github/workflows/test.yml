@@ -15,7 +15,8 @@ jobs:
       matrix:
         os: 
           - ubuntu-latest    # Linux x86_64
-          - macos-latest     # macOS ARM64 (M1/M2)
+          # Note: macOS runners are expensive and Docker setup is complex
+          # ARM64 compatibility is tested locally with altmannmarcelo/readyset-mac image
     
     runs-on: ${{ matrix.os }}
     
@@ -23,15 +24,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Docker (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          # Install Docker Desktop on macOS runners
-          brew install --cask docker
-          sudo /Applications/Docker.app/Contents/MacOS/Docker --unattended --install-privileged-components
-          open -a Docker
-          # Wait for Docker to start
-          while ! docker system info > /dev/null 2>&1; do sleep 1; done
 
       - name: Display system info
         run: |
